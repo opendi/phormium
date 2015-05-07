@@ -12,7 +12,7 @@ use Phormium\Filter\RawFilter;
 /**
  * Performs lazy database lookup for sets of objects.
  */
-class QuerySet
+class QuerySet implements \Iterator
 {
     /**
      * Meta data of the Model this QuerySet is handling.
@@ -511,5 +511,34 @@ class QuerySet
         if (isset($this->filter)) {
             $this->filter = clone $this->filter;
         }
+    }
+
+    // ******************************************
+    // *** Iterator                           ***
+    // ******************************************
+
+    public function current()
+    {
+
+    }
+
+    public function key()
+    {
+
+    }
+
+    public function next()
+    {
+
+    }
+
+    public function rewind()
+    {
+
+    }
+
+    public function valid()
+    {
+
     }
 }

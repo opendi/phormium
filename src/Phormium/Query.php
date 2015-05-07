@@ -70,17 +70,20 @@ class Query
             $columns = $this->meta->columns;
         }
 
-        $columns = implode(", ", $columns);
-        $table = $this->meta->table;
+        $builder = new QueryBuilder($this->driver);
+        $builder->table($this->meta->table)
+            ->columns($columns)
+            ->filter($filter)
+            ->limit($limit)
+            ->offset($offset)
+            ->order($order);
+
+        list($query, $args) = $builder->buildSelect();
+
         $class = $this->meta->class;
+        $database = $this->meta->database;
 
-        list($limit1, $limit2) = $this->constructLimitOffset($limit, $offset);
-        list($where, $args) = $this->constructWhere($filter);
-        $order = $this->constructOrder($order);
-
-        $query = "SELECT{$limit1} {$columns} FROM {$table}{$where}{$order}{$limit2};";
-
-        $conn = $this->database->getConnection($this->meta->database);
+        $conn = $this->database->getConnection($database);
         return $conn->preparedQuery($query, $args, $fetchType, $class);
     }
 
@@ -105,12 +108,13 @@ class Query
 
         $this->checkColumnsExist($columns);
 
-        $sqlColumns = implode(', ', $columns);
+        $builder = new QueryBuilder($this->driver);
+        $builder->table($this->meta->table)
+            ->columns($columns)
+            ->filter($filter)
+            ->order($order);
 
-        list($where, $args) = $this->constructWhere($filter);
-        $order = $this->constructOrder($order);
-
-        $query = "SELECT DISTINCT {$sqlColumns} FROM {$table}{$where}{$order};";
+        list($query, $args) = $builder->buildSelect(true);
 
         if (count($columns) > 1) {
             // If multiple columns, return array of arrays
@@ -145,10 +149,12 @@ class Query
             }
         }
 
-        list($where, $args) = $this->constructWhere($filter);
-        $select = $aggregate->render();
+        $builder = new QueryBuilder($this->driver);
+        $builder->table($this->meta->table)
+            ->aggregate($aggregate)
+            ->filter($filter);
 
-        $query = "SELECT {$select} as aggregate FROM {$table}{$where};";
+        list($query, $args) = $builder->buildSelectAggregate();
 
         $conn = $this->database->getConnection($this->meta->database);
         $data = $conn->preparedQuery($query, $args);
