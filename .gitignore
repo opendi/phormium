@@ -9,3 +9,5 @@ composer.lock
 /phpunit.xml
 *.sublime-project
 *.sublime-workspace
+.idea
+.phpunit.result.cache
