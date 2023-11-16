@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  php-cli:
+    container_name: phormium
+    build:
+      context: .
+      dockerfile: ./build/docker/php-cli/Dockerfile
+      args:
+        - BUILD_ENV=local
+    tty: true
+    volumes:
+      - .:/opt/phormium
+      - ./build/docker/local/php-cli/xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
+    environment:
+      - PHP_IDE_CONFIG=serverName=default
