@@ -1,16 +1,18 @@
 <?php
 
+namespace Phormium\Tests\Unit\Query;
+
+use Phormium\Exception\OrmException;
 use Phormium\Query\ColumnOrder;
 use Phormium\Query\OrderBy;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group query
  * @group unit
  */
-class OrderByTest extends \PHPUnit_Framework_TestCase
-{
-    public function testConstruct()
-    {
+class OrderByTest extends TestCase {
+    public function testConstruct() {
         $co1 = new ColumnOrder("foo", ColumnOrder::ASCENDING);
         $co2 = new ColumnOrder("foo", ColumnOrder::ASCENDING);
         $orderBy = new OrderBy([$co1, $co2]);
@@ -20,8 +22,7 @@ class OrderByTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($co2, $orderBy->orders()[1]);
     }
 
-    public function testAdding()
-    {
+    public function testAdding() {
         $co1 = new ColumnOrder("foo", ColumnOrder::ASCENDING);
         $co2 = new ColumnOrder("foo", ColumnOrder::ASCENDING);
 
@@ -38,48 +39,15 @@ class OrderByTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($co2, $ob2->orders()[1]);
     }
 
-    /**
-     * @expectedException Phormium\Exception\OrmException
-     * @expectedExceptionMessage OrderBy needs at least one ColumnOrder element, empty array given.
-     */
-    public function testEmptyOrder()
-    {
-        $orderBy = new OrderBy([]);
+    public function testEmptyOrder() {
+        $this->expectException(OrmException::class);
+        $this->expectExceptionMessage("OrderBy needs at least one ColumnOrder element, empty array given.");
+        new OrderBy([]);
     }
 
-    /**
-     * @expectedException Phormium\Exception\OrmException
-     * @expectedExceptionMessage Expected $orders to be instances of Phormium\Query\ColumnOrder. Given [string].
-     */
-    public function testInvalidOrder()
-    {
-        $orderBy = new OrderBy(["foo"]);
+    public function testInvalidOrder() {
+        $this->expectExceptionMessage("Expected \$orders to be instances of Phormium\Query\ColumnOrder. Given [string].");
+        $this->expectException(OrmException::class);
+        new OrderBy(["foo"]);
     }
-
-    // /**
-    //  * @expectedException Phormium\Exception\OrmException
-    //  * @expectedExceptionMessage $limit must be a positive integer or null.
-    //  */
-    // public function testInvalidLimit2()
-    // {
-    //     new LimitOffset('foo');
-    // }
-
-    // /**
-    //  * @expectedException Phormium\Exception\OrmException
-    //  * @expectedExceptionMessage $offset must be a positive integer or null.
-    //  */
-    // public function testInvalidOffset()
-    // {
-    //     new LimitOffset(1, -1);
-    // }
-
-    // /**
-    //  * @expectedException Phormium\Exception\OrmException
-    //  * @expectedExceptionMessage $offset cannot be given without a $limit
-    //  */
-    // public function testOffsetWithoutLimit()
-    // {
-    //     new LimitOffset(null, 1);
-    // }
 }

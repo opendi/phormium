@@ -1,15 +1,17 @@
 <?php
 
+namespace Phormium\Tests\Unit\Query;
+
+use Phormium\Exception\InvalidQueryException;
 use Phormium\Query\Aggregate;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group query
  * @group unit
  */
-class AggregateTest extends \PHPUnit_Framework_TestCase
-{
-    public function testConstruct()
-    {
+class AggregateTest extends TestCase {
+    public function testConstruct() {
         $agg = new Aggregate(Aggregate::AVERAGE, "foo");
         $this->assertSame("avg", $agg->type());
         $this->assertSame("foo", $agg->column());
@@ -19,21 +21,15 @@ class AggregateTest extends \PHPUnit_Framework_TestCase
         $this->assertSame("*", $agg->column());
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage Invalid aggregate type [xxx].
-     */
-    public function testInvalidType()
-    {
+    public function testInvalidType() {
+        $this->expectExceptionMessage("Invalid aggregate type [xxx].");
+        $this->expectException(InvalidQueryException::class);
         $agg = new Aggregate('xxx', 'yyy');
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage Aggregate type [avg] requires a column to be given.
-     */
-    public function testRequiresColumnError()
-    {
-        $agg = new Aggregate(Aggregate::AVERAGE);
+    public function testRequiresColumnError() {
+        $this->expectExceptionMessage("Aggregate type [avg] requires a column to be given.");
+        $this->expectException(InvalidQueryException::class);
+        new Aggregate(Aggregate::AVERAGE);
     }
 }

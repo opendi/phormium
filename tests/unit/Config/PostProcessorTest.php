@@ -1,18 +1,18 @@
 <?php
 
-namespace Phormium\Tests;
+namespace Phormium\Tests\Unit\Config;
 
 use PDO;
 use Phormium\Config\PostProcessor;
+use Phormium\Exception\ConfigurationException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group config
  * @group unit
  */
-class PostProcessorTest extends \PHPUnit_Framework_TestCase
-{
-    public function testProcessConstant()
-    {
+class PostProcessorTest extends TestCase {
+    public function testProcessConstant() {
         $processor = new PostProcessor();
 
         // Constants remain unchanged
@@ -30,28 +30,21 @@ class PostProcessorTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(123, $processor->processConstant(123, true));
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Invalid constant value
-     */
-    public function testProcessConstantError1()
-    {
+    public function testProcessConstantError1() {
+        $this->expectExceptionMessage("Invalid constant value");
+        $this->expectException(ConfigurationException::class);
         $processor = new PostProcessor();
         $processor->processConstant([]);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Invalid constant value
-     */
-    public function testProcessConstantError2()
-    {
+    public function testProcessConstantError2() {
+        $this->expectExceptionMessage("Invalid constant value");
+        $this->expectException(ConfigurationException::class);
         $processor = new PostProcessor();
         $processor->processConstant("foo", false);
     }
 
-    public function testProcessConfig()
-    {
+    public function testProcessConfig() {
         $config = [
             "databases" => [
                 "one" => [
@@ -88,12 +81,9 @@ class PostProcessorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Invalid attribute "foo" specified in configuration for database "one".
-     */
-    public function testProcessConfigError1()
-    {
+    public function testProcessConfigError1() {
+        $this->expectExceptionMessage("Invalid attribute \"foo\" specified in configuration for database \"one\".");
+        $this->expectException(ConfigurationException::class);
         $processor = new PostProcessor();
         $processor->processConfig([
             "databases" => [
@@ -107,12 +97,9 @@ class PostProcessorTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Invalid value given for attribute "PDO::ATTR_TIMEOUT", in configuration for database "one".
-     */
-    public function testProcessConfigError2()
-    {
+    public function testProcessConfigError2() {
+        $this->expectExceptionMessage("Invalid value given for attribute \"PDO::ATTR_TIMEOUT\", in configuration for database \"one\".");
+        $this->expectException(ConfigurationException::class);
         $processor = new PostProcessor();
         $processor->processConfig([
             "databases" => [
@@ -126,8 +113,7 @@ class PostProcessorTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
-    public function testParseDriver()
-    {
+    public function testParseDriver() {
         $proc = new PostProcessor();
 
         $this->assertSame('informix', $proc->parseDriver('informix:host=localhost'));

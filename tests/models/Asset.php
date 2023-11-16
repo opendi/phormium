@@ -7,8 +7,7 @@ use Phormium\Model;
 /**
  * Used to test
  */
-class Asset extends Model
-{
+class Asset extends Model {
     protected static $_meta = [
         'database' => 'testdb',
         'table' => 'asset',

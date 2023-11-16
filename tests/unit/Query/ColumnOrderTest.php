@@ -1,15 +1,17 @@
 <?php
 
+namespace Phormium\Tests\Unit\Query;
+
+use Phormium\Exception\OrmException;
 use Phormium\Query\ColumnOrder;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group query
  * @group unit
  */
-class ColumnOrderTest extends \PHPUnit_Framework_TestCase
-{
-    public function testConstruct()
-    {
+class ColumnOrderTest extends TestCase {
+    public function testConstruct() {
         $order = new ColumnOrder("foo", "asc");
 
         $this->assertSame("foo", $order->column());
@@ -21,8 +23,7 @@ class ColumnOrderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame("desc", $order->direction());
     }
 
-    public function testFactories()
-    {
+    public function testFactories() {
         $order = ColumnOrder::asc("foo");
 
         $this->assertSame("foo", $order->column());
@@ -34,21 +35,15 @@ class ColumnOrderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame("desc", $order->direction());
     }
 
-    /**
-     * @expectedException Phormium\Exception\OrmException
-     * @expectedExceptionMessage Invalid $direction [bar]. Expected one of [asc, desc]
-     */
-    public function testInvalidDirection()
-    {
+    public function testInvalidDirection() {
+        $this->expectExceptionMessage("Invalid \$direction [bar]. Expected one of [asc, desc]");
+        $this->expectException(OrmException::class);
         new ColumnOrder("foo", "bar");
     }
 
-    /**
-     * @expectedException Phormium\Exception\OrmException
-     * @expectedExceptionMessage Invalid $column type [array], expected string.
-     */
-    public function testInvalidColumn()
-    {
+    public function testInvalidColumn() {
+        $this->expectExceptionMessage("Invalid \$column type [array], expected string.");
+        $this->expectException(OrmException::class);
         new ColumnOrder([], "asc");
     }
 }

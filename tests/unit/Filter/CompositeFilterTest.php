@@ -3,18 +3,18 @@
 namespace Phormium\Tests\Unit\Filter;
 
 use Mockery as m;
+use Phormium\Exception\InvalidQueryException;
 use Phormium\Filter\ColumnFilter;
 use Phormium\Filter\CompositeFilter;
 use Phormium\Filter\Filter;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group filter
  */
-class CompositeFilterTest extends \PHPUnit_Framework_TestCase
-{
-    public function testFactoryAndOr()
-    {
+class CompositeFilterTest extends TestCase {
+    public function testFactoryAndOr() {
         $subfilters = [
             m::mock(Filter::class),
             m::mock(Filter::class),
@@ -32,8 +32,7 @@ class CompositeFilterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($subfilters, $filter->filters());
     }
 
-    public function testArrayToFilter()
-    {
+    public function testArrayToFilter() {
         $filter = new CompositeFilter(CompositeFilter::OP_AND, [
             ["foo", "=", "bar"],
             ["bla", "not null"],
@@ -54,26 +53,19 @@ class CompositeFilterTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($filters[1]->value());
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage Invalid composite filter operation [foo]. Expected one of: AND, OR
-     */
-    public function testInvalidOperation()
-    {
+    public function testInvalidOperation() {
+        $this->expectExceptionMessage("Invalid composite filter operation [foo]. Expected one of: AND, OR");
+        $this->expectException(InvalidQueryException::class);
         new CompositeFilter('foo');
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage CompositeFilter requires an array of Filter objects as second argument, got [string].
-     */
-    public function testInvalidSubfilter()
-    {
+    public function testInvalidSubfilter() {
+        $this->expectExceptionMessage("CompositeFilter requires an array of Filter objects as second argument, got [string].");
+        $this->expectException(InvalidQueryException::class);
         new CompositeFilter(CompositeFilter::OP_AND, ["foo"]);
     }
 
-    public function testWithAdded()
-    {
+    public function testWithAdded() {
         $sf1 = m::mock(Filter::class);
         $sf2 = m::mock(Filter::class);
         $sf3 = m::mock(Filter::class);

@@ -1,15 +1,16 @@
 <?php
 
+namespace Phormium\Tests\Unit\Query;
+
 use Phormium\Query\QuerySegment;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group query
  * @group unit
  */
-class QuerySegmentTest extends \PHPUnit_Framework_TestCase
-{
-    public function testConstruct()
-    {
+class QuerySegmentTest extends TestCase {
+    public function testConstruct() {
         $query = "foo = ?";
         $args = ["bar"];
 
@@ -23,8 +24,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
         $this->assertSame([], $qs->args());
     }
 
-    public function testCombine()
-    {
+    public function testCombine() {
         $qs1 = new QuerySegment("WHERE a = ?", ["foo"]);
         $qs2 = new QuerySegment("AND b = ?", ["bar"]);
 
@@ -33,8 +33,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(["foo", "bar"], $qsc->args());
     }
 
-    public function testReduce()
-    {
+    public function testReduce() {
         $qs1 = new QuerySegment("SELECT *", []);
         $qs2 = new QuerySegment("FROM table", []);
         $qs3 = new QuerySegment("WHERE a = ?", ["foo"]);
@@ -51,8 +50,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $reduced->args());
     }
 
-    public function testImplode()
-    {
+    public function testImplode() {
         $qs1 = new QuerySegment("foo", [1]);
         $qs2 = new QuerySegment("bar", []);
         $qs3 = new QuerySegment("baz", [3, 4]);
@@ -68,8 +66,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $imploded->args());
     }
 
-    public function testImplodeEmpty()
-    {
+    public function testImplodeEmpty() {
         $separator = new QuerySegment("x", ['y']);
 
         $imploded = QuerySegment::implode($separator, []);
@@ -78,8 +75,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testImplodeSingle()
-    {
+    public function testImplodeSingle() {
         $segment = new QuerySegment("foo", ['bar']);
         $separator = new QuerySegment("bla", ['tra']);
 
@@ -88,8 +84,7 @@ class QuerySegmentTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testEmbrace()
-    {
+    public function testEmbrace() {
         $query = "a = ? AND b = ?";
         $args = [1, 2];
 

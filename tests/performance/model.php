@@ -1,7 +1,6 @@
 <?php
 
-class City extends Phormium\Model
-{
+class City extends Phormium\Model {
     protected static $_meta = [
         'database' => 'test',
         'table' => 'city',
@@ -15,8 +14,7 @@ class City extends Phormium\Model
     public $population;
 }
 
-class Country extends Phormium\Model
-{
+class Country extends Phormium\Model {
     protected static $_meta = [
         'database' => 'test',
         'table' => 'country',

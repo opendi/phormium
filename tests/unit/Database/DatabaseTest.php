@@ -3,37 +3,35 @@
 namespace Phormium\Tests\Unit\Database;
 
 use Evenement\EventEmitter;
+use Exception;
 use Mockery as m;
 use Phormium\Database\Connection;
 use Phormium\Database\Database;
 use Phormium\Database\Factory;
 use Phormium\Event;
+use Phormium\Exception\DatabaseException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group database
  */
-class DatabaseTest extends \PHPUnit_Framework_TestCase
-{
-    public function tearDown()
-    {
+class DatabaseTest extends TestCase {
+    public function tearDown(): void {
         m::close();
     }
 
-    protected function getMockEmitter()
-    {
-        $emitter = m::mock(EventEmitter::class);
+    public function testSetConnection() {
+        $conn = m::mock(Connection::class);
 
-        $emitter->shouldReceive('on')->once()
-            ->with(Event::QUERY_STARTED, m::type('callable'));
+        $database = $this->newDatabase();
+        $database->setConnection('foo', $conn);
 
-        $emitter->shouldReceive('emit');
-
-        return $emitter;
+        $actual = $database->getConnection('foo');
+        $this->assertSame($actual, $conn);
     }
 
-    protected function newDatabase(Factory $factory = null, EventEmitter $emitter = null)
-    {
+    protected function newDatabase(Factory $factory = null, EventEmitter $emitter = null) {
         if (!isset($factory)) {
             $factory = m::mock(Factory::class);
         }
@@ -45,23 +43,20 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         return new Database($factory, $emitter);
     }
 
-    public function testSetConnection()
-    {
-        $conn = m::mock(Connection::class);
+    protected function getMockEmitter() {
+        $emitter = m::mock(EventEmitter::class);
 
-        $database = $this->newDatabase();
-        $database->setConnection('foo', $conn);
+        $emitter->shouldReceive('on')->once()
+            ->with(Event::QUERY_STARTED, m::type('callable'));
 
-        $actual = $database->getConnection('foo');
-        $this->assertSame($actual, $conn);
+        $emitter->shouldReceive('emit');
+
+        return $emitter;
     }
 
-    /**
-     * @expectedException Phormium\Exception\DatabaseException
-     * @expectedExceptionMessage Connection "foo" is already connected.
-     */
-    public function testSetConnectionError()
-    {
+    public function testSetConnectionError() {
+        $this->expectExceptionMessage("Connection \"foo\" is already connected.");
+        $this->expectException(DatabaseException::class);
         $conn = m::mock(Connection::class);
 
         $database = $this->newDatabase();
@@ -69,11 +64,8 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $database->setConnection('foo', $conn);
     }
 
-    /**
-     * @depends testSetConnectionError
-     */
-    public function testDisconnect()
-    {
+    public function testDisconnect() {
+        $this->setDependencies(['testSetConnectionError']);
         $conn = m::mock(Connection::class);
 
         $database = $this->newDatabase();
@@ -96,8 +88,7 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $database->disconnect('foo');
     }
 
-    public function testDisconnectAll()
-    {
+    public function testDisconnectAll() {
         $conn1 = m::mock(Connection::class);
         $conn2 = m::mock(Connection::class);
 
@@ -114,21 +105,20 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $conn2->shouldReceive('rollback')->once();
 
         $database->disconnectAll();
+
+        $this->assertFalse($database->isConnected('db1'));
+        $this->assertFalse($database->isConnected('db2'));
     }
 
-    /**
-     * @expectedException Phormium\Exception\DatabaseException
-     * @expectedExceptionMessage Already in transaction.
-     */
-    public function testBeginTwice()
-    {
+    public function testBeginTwice() {
+        $this->expectExceptionMessage("Already in transaction.");
+        $this->expectException(DatabaseException::class);
         $database = $this->newDatabase();
         $database->begin();
         $database->begin();
     }
 
-    public function testTransactionCommit()
-    {
+    public function testTransactionCommit() {
         $conn1 = m::mock(Connection::class);
         $conn2 = m::mock(Connection::class);
 
@@ -149,18 +139,14 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($database->beginTriggered());
     }
 
-    /**
-     * @expectedException Phormium\Exception\DatabaseException
-     * @expectedExceptionMessage Cannot commit. Not in transaction.
-     */
-    public function testCommitOutsideOfTransaction()
-    {
+    public function testCommitOutsideOfTransaction() {
+        $this->expectExceptionMessage("Cannot commit. Not in transaction.");
+        $this->expectException(DatabaseException::class);
         $database = $this->newDatabase();
         $database->commit();
     }
 
-    public function testTransactionRollback()
-    {
+    public function testTransactionRollback() {
         $conn1 = m::mock(Connection::class);
         $conn2 = m::mock(Connection::class);
 
@@ -181,18 +167,14 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($database->beginTriggered());
     }
 
-    /**
-     * @expectedException Phormium\Exception\DatabaseException
-     * @expectedExceptionMessage Cannot roll back. Not in transaction.
-     */
-    public function testRollbackOutsideOfTransaction()
-    {
+    public function testRollbackOutsideOfTransaction() {
+        $this->expectExceptionMessage("Cannot roll back. Not in transaction.");
+        $this->expectException(DatabaseException::class);
         $database = $this->newDatabase();
         $database->rollback();
     }
 
-    public function testTransactionCallback()
-    {
+    public function testTransactionCallback() {
         $conn = m::mock(Connection::class);
 
         $database = $this->newDatabase();
@@ -210,12 +192,9 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($database->beginTriggered());
     }
 
-    /**
-     * @expectedException Phormium\Exception\DatabaseException
-     * @expectedExceptionMessage Transaction failed. Rolled back.
-     */
-    public function testTransactionCallbackRollback()
-    {
+    public function testTransactionCallbackRollback() {
+        $this->expectExceptionMessage("Transaction failed. Rolled back.");
+        $this->expectException(DatabaseException::class);
         $conn = m::mock(Connection::class);
 
         $database = $this->newDatabase();
@@ -228,12 +207,11 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
 
         $database->transaction(function () use ($database) {
             $this->assertTrue($database->beginTriggered());
-            throw new \Exception("#fail");
+            throw new Exception("#fail");
         });
     }
 
-    public function testGetConnection()
-    {
+    public function testGetConnection() {
         $conn = m::mock(Connection::class);
 
         $factory = m::mock(Factory::class);

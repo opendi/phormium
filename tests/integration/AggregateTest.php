@@ -2,18 +2,15 @@
 
 namespace Phormium\Tests\Integration;
 
-use Phormium\Orm;
-use Phormium\Query\Aggregate;
+use Phormium\Exception\InvalidQueryException;
 use Phormium\Tests\Models\Trade;
 
 /**
  * @group integration
  * @group aggregate
  */
-class AggregateTest extends DbTest
-{
-    public function testAggregates()
-    {
+class AggregateTest extends DbTest {
+    public function testAggregates() {
         $tradedate = date('Y-m-d');
         $count = 10;
 
@@ -26,8 +23,8 @@ class AggregateTest extends DbTest
         $prices = [];
         $quantities = [];
 
-        foreach(range(1, $count) as $tradeno) {
-            $price = rand(100, 100000) / 100;;
+        foreach (range(1, $count) as $tradeno) {
+            $price = rand(100, 100000) / 100;
             $quantity = rand(1, 10000);
 
             $t = new Trade();
@@ -39,10 +36,10 @@ class AggregateTest extends DbTest
         }
 
         // Calculate expected values
-        $avgPrice = array_sum($prices) / count($prices);
+        $avgPrice = round(array_sum($prices) / count($prices), 3);
         $maxPrice = max($prices);
         $minPrice = min($prices);
-        $sumPrice = array_sum($prices);
+        $sumPrice = round(array_sum($prices), 3);
 
         $avgQuantity = array_sum($quantities) / count($quantities);
         $maxQuantity = max($quantities);
@@ -51,23 +48,20 @@ class AggregateTest extends DbTest
 
         $this->assertSame($count, $qs->count());
 
-        $this->assertEquals($avgPrice, $qs->avg('price'));
-        $this->assertEquals($minPrice, $qs->min('price'));
-        $this->assertEquals($avgPrice, $qs->avg('price'));
-        $this->assertEquals($sumPrice, $qs->sum('price'));
+        $this->assertEquals($avgPrice, $qs->avg('price'), "avg function");
+        $this->assertEquals($minPrice, $qs->min('price'), "min function");
+        $this->assertEquals($maxPrice, $qs->max('price'), "max function");
+        $this->assertEquals($sumPrice, $qs->sum('price'), "sum function");
 
-        $this->assertEquals($avgQuantity, $qs->avg('quantity'));
-        $this->assertEquals($minQuantity, $qs->min('quantity'));
-        $this->assertEquals($avgQuantity, $qs->avg('quantity'));
-        $this->assertEquals($sumQuantity, $qs->sum('quantity'));
+        $this->assertEquals($avgQuantity, $qs->avg('quantity'), "avg function");
+        $this->assertEquals($minQuantity, $qs->min('quantity'), "min function");
+        $this->assertEquals($maxQuantity, $qs->max('quantity'), "max function");
+        $this->assertEquals($sumQuantity, $qs->sum('quantity'), "sum function");
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage Error forming aggregate query. Column [xxx] does not exist in table [trade].
-     */
-    public function testInvalidColumn()
-    {
+    public function testInvalidColumn() {
+        $this->expectExceptionMessage("Error forming aggregate query. Column [xxx] does not exist in table [trade].");
+        $this->expectException(InvalidQueryException::class);
         Trade::objects()->avg('xxx');
     }
 }

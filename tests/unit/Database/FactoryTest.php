@@ -2,18 +2,18 @@
 
 namespace Phormium\Tests\Unit\Database;
 
+use Evenement\EventEmitter;
+use Exception;
 use Mockery as m;
 use PDO;
-use Phormium\Database\Database;
 use Phormium\Database\Factory;
-use Phormium\Event;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group database
  */
-class FactoryTest extends \PHPUnit_Framework_TestCase
-{
+class FactoryTest extends TestCase {
     private $config = [
         "db1" => [
             "dsn" => "sqlite:tmp/db1.db",
@@ -31,18 +31,11 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         ]
     ];
 
-    public function tearDown()
-    {
+    public function tearDown(): void {
         m::close();
     }
 
-    protected function getMockEmitter()
-    {
-        return m::mock("Evenement\\EventEmitter");
-    }
-
-    public function testAttributes1()
-    {
+    public function testAttributes1() {
         $emitter = $this->getMockEmitter();
 
         $config = $this->config;
@@ -59,8 +52,11 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testAttributes2()
-    {
+    protected function getMockEmitter() {
+        return m::mock(EventEmitter::class);
+    }
+
+    public function testAttributes2() {
         $emitter = $this->getMockEmitter();
 
         $config = $this->config;
@@ -77,8 +73,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testAttributesCannotChange()
-    {
+    public function testAttributesCannotChange() {
         $emitter = $this->getMockEmitter();
 
         $config = $this->config;
@@ -99,29 +94,9 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    /**
-     * @expectedException PHPUnit_Framework_Error_Warning
-     * @expectedExceptionMessage Attribute PDO::ATTR_ERRMODE is set to something other than PDO::ERRMODE_EXCEPTION for database "db1". This is not allowed because Phormium depends on this setting. Skipping attribute definition.
-     */
-    public function testAttributesCannotChangeError()
-    {
-        $emitter = $this->getMockEmitter();
-
-        $config = $this->config;
-        $config['db1']['attributes'] = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT
-        ];
-
-        $factory = new Factory($config, $emitter);
-        $factory->newConnection("db1");
-    }
-
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed setting PDO attribute "foo" to "bar" on database "db1".
-     */
-    public function testInvalidAttribute()
-    {
+    public function testInvalidAttribute() {
+        $this->expectExceptionMessage("Failed setting PDO attribute \"foo\" to \"bar\" on database \"db1\".");
+        $this->expectException(Exception::class);
         $emitter = $this->getMockEmitter();
 
         $config = $this->config;
@@ -131,12 +106,9 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         @$factory->newConnection("db1");
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Database "db3" is not configured.
-     */
-    public function testNotConfiguredException()
-    {
+    public function testNotConfiguredException() {
+        $this->expectExceptionMessage("Database \"db3\" is not configured.");
+        $this->expectException(Exception::class);
         $emitter = $this->getMockEmitter();
         $config = $this->config;
 

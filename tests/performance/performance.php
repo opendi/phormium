@@ -31,7 +31,7 @@ echo "-------------------------------\n";
 // ----------------------------------------------
 
 start("Select all");
-repeat(20, function() {
+repeat(20, function () {
     City::all();
 });
 finish();
@@ -41,7 +41,7 @@ finish();
 $cities = City::all();
 
 start("Select each by ID");
-foreach($cities as $city) {
+foreach ($cities as $city) {
     City::get($city->id);
 }
 finish();
@@ -49,7 +49,7 @@ finish();
 // ----------------------------------------------
 
 start("Select each by name");
-foreach($cities as $city) {
+foreach ($cities as $city) {
     City::get($city->id);
 }
 finish();
@@ -57,7 +57,7 @@ finish();
 // ----------------------------------------------z
 
 start("Update all");
-repeat(20, function() {
+repeat(20, function () {
     City::objects()->update([
         'population' => 1
     ]);
@@ -69,7 +69,7 @@ finish();
 $cities = City::all();
 
 start("Update each (update)");
-foreach($cities as $city) {
+foreach ($cities as $city) {
     $city->population += 1;
     $city->update();
 }
@@ -80,7 +80,7 @@ finish();
 $cities = City::all();
 
 start("Update each (save)");
-foreach($cities as $city) {
+foreach ($cities as $city) {
     $city->population += 1;
     $city->save();
 }

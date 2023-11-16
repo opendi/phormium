@@ -6,21 +6,18 @@ use Mockery as m;
 use PDO;
 use Phormium\Database\Connection;
 use Phormium\Database\Driver;
-use Phormium\Query\QuerySegment;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group database
  */
-class ConnectionTest extends \PHPUnit_Framework_TestCase
-{
-    public function tearDown()
-    {
+class ConnectionTest extends TestCase {
+    public function tearDown(): void {
         m::close();
     }
 
-    public function testConstructor()
-    {
+    public function testConstructor() {
         $driver = Driver::PGSQL;
         $emitter = m::mock("Evenement\\EventEmitter");
         $pdo = m::mock("PDO");

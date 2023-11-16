@@ -4,7 +4,6 @@ namespace Phormium\Tests\Integration;
 
 use PDOException;
 use Phormium\Database\Connection;
-use Phormium\Event;
 use Phormium\Orm;
 use Phormium\Query\QuerySegment;
 use Phormium\Tests\Models\Person;
@@ -12,14 +11,11 @@ use Phormium\Tests\Models\Person;
 /**
  * @group connection
  */
-class ConnectionTest extends DbTest
-{
-    private $connection;
-    private $driver;
-
+class ConnectionTest extends DbTest {
     public $triggeredEvents = [];
     public $triggeredArguments = [];
-
+    private $connection;
+    private $driver;
     private $queryEvents = [
         'query.started',
         'query.preparing',
@@ -32,8 +28,7 @@ class ConnectionTest extends DbTest
         'query.error',
     ];
 
-    public function setUp()
-    {
+    public function setUp(): void {
         $this->connection = Orm::database()->getConnection('testdb');
         $this->driver = $this->connection->getDriver();
 
@@ -44,15 +39,14 @@ class ConnectionTest extends DbTest
         $that = $this;
         foreach ($this->queryEvents as $event) {
             Orm::emitter()->removeAllListeners($event);
-            Orm::emitter()->on($event, function() use ($event, $that) {
+            Orm::emitter()->on($event, function () use ($event, $that) {
                 $that->triggeredEvents[] = $event;
                 $that->triggeredArguments[] = func_get_args();
             });
         }
     }
 
-    public function testExecute()
-    {
+    public function testExecute() {
         $name = uniqid();
         $income = 100;
 
@@ -78,38 +72,30 @@ class ConnectionTest extends DbTest
         $this->assertSame(3, $numRows);
     }
 
-    /**
-     * @expectedException PDOException
-     */
-    public function testExecuteFailure()
-    {
+    public function testExecuteFailure() {
+        $this->expectException(PDOException::class);
         $segment = new QuerySegment("No one would have believed");
         $this->connection->execute($segment);
     }
 
-    public function testQuery()
-    {
+    public function testQuery() {
         $segment = new QuerySegment("SELECT count(*) as ct FROM person");
         $result = $this->connection->query($segment);
 
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertCount(1, $result);
-        $this->assertInternalType('array', $result[0]);
+        $this->assertIsArray($result[0]);
         $this->assertArrayHasKey('ct', $result[0]);
-        $this->assertTrue(is_numeric($result[0]['ct']));
+        $this->assertIsNumeric($result[0]['ct']);
     }
 
-    /**
-     * @expectedException PDOException
-     */
-    public function testQueryFailure()
-    {
+    public function testQueryFailure() {
+        $this->expectException(PDOException::class);
         $segment = new QuerySegment("in the last years of the nineteenth century");
         $this->connection->query($segment);
     }
 
-    public function testPreparedQuery()
-    {
+    public function testPreparedQuery() {
         $name = uniqid();
         $p = Person::fromArray(compact('name'));
         $p->insert();
@@ -132,12 +118,8 @@ class ConnectionTest extends DbTest
         $this->assertSame($expected, $actual);
     }
 
-    /**
-     * @expectedException PDOException
-     * @group 123
-     */
-    public function testPreparedQueryFailure()
-    {
+    public function testPreparedQueryFailure() {
+        $this->expectException(PDOException::class);
         $segment = new QuerySegment("that human affairs were being watched");
         $this->connection->preparedQuery($segment);
     }
@@ -146,8 +128,7 @@ class ConnectionTest extends DbTest
     // *** TESTING EVENTS                     ***
     // ******************************************
 
-    public function testQueryEvents()
-    {
+    public function testQueryEvents() {
         $segment = new QuerySegment("SELECT * FROM person");
         $this->connection->query($segment);
 
@@ -164,8 +145,39 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testQueryEventsFailure()
-    {
+    private function checkTriggeredEvents(QuerySegment $segment) {
+        $this->assertSame(
+            count($this->triggeredEvents),
+            count($this->triggeredArguments)
+        );
+
+        foreach ($this->triggeredEvents as $key => $event) {
+            $tArgs = $this->triggeredArguments[$key];
+
+            // Checks valid for all events
+            $this->assertSame($segment->query(), $tArgs[0]);
+            $this->assertSame($segment->args(), $tArgs[1]);
+            $this->assertInstanceOf(Connection::class, $tArgs[2]);
+
+            // Check event argument count
+            switch ($event) {
+                case "query.error":
+                case "query.completed":
+                    $this->assertCount(4, $tArgs, "Wrong argument count for event $event");
+                    break;
+                default:
+                    $this->assertCount(3, $tArgs, "Wrong argument count for event $event");
+                    break;
+            }
+
+            // Event specific checks
+            if ($event === 'query.error') {
+                $this->assertInstanceOf("PDOException", $tArgs[3]);
+            }
+        }
+    }
+
+    public function testQueryEventsFailure() {
         $segment = new QuerySegment("from the timeless worlds of space.");
 
         try {
@@ -183,8 +195,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testPreparedQueryEvents()
-    {
+    public function testPreparedQueryEvents() {
         $segment = new QuerySegment("SELECT * FROM person WHERE name like ?", ['xxx']);
 
         $this->assertEmpty($this->triggeredEvents);
@@ -206,8 +217,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testPreparedQueryGeneratorEvents()
-    {
+    public function testPreparedQueryGeneratorEvents() {
         $segment = new QuerySegment("SELECT * FROM person WHERE name like ?", ['xxx']);
 
         $class = Person::class;
@@ -235,8 +245,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testPreparedQueryEventsFailure()
-    {
+    public function testPreparedQueryEventsFailure() {
         $segment = new QuerySegment("No one could have dreamed");
 
         $errored = false;
@@ -268,8 +277,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testExecuteEvents()
-    {
+    public function testExecuteEvents() {
         $segment = new QuerySegment("UPDATE person SET income = income + 1");
 
         $this->connection->execute($segment);
@@ -284,8 +292,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testExecuteEventsFailure()
-    {
+    public function testExecuteEventsFailure() {
         $segment = new QuerySegment("we were being scrutinized");
 
         $errored = false;
@@ -306,8 +313,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testPreparedExecuteEvents()
-    {
+    public function testPreparedExecuteEvents() {
         $segment = new QuerySegment("UPDATE person SET income = income + 1 WHERE id = ?", [1]);
 
         $this->connection->preparedExecute($segment);
@@ -324,8 +330,7 @@ class ConnectionTest extends DbTest
         $this->checkTriggeredEvents($segment);
     }
 
-    public function testPreparedExecuteEventsFailure()
-    {
+    public function testPreparedExecuteEventsFailure() {
         $segment = new QuerySegment("as someone with a microscope studies creatures" .
             "that swarm and multiply in a drop of water");
 
@@ -356,38 +361,5 @@ class ConnectionTest extends DbTest
 
         $this->assertEquals($expected, $this->triggeredEvents);
         $this->checkTriggeredEvents($segment);
-    }
-
-    private function checkTriggeredEvents(QuerySegment $segment)
-    {
-        $this->assertSame(
-            count($this->triggeredEvents),
-            count($this->triggeredArguments)
-        );
-
-        foreach($this->triggeredEvents as $key => $event) {
-            $tArgs = $this->triggeredArguments[$key];
-
-            // Checks valid for all events
-            $this->assertSame($segment->query(), $tArgs[0]);
-            $this->assertSame($segment->args(), $tArgs[1]);
-            $this->assertInstanceOf(Connection::class, $tArgs[2]);
-
-            // Check event argument count
-            switch ($event) {
-                case "query.error":
-                case "query.completed":
-                    $this->assertCount(4, $tArgs, "Wrong argument count for event $event");
-                    break;
-                default:
-                    $this->assertCount(3, $tArgs, "Wrong argument count for event $event");
-                    break;
-            }
-
-            // Event specific checks
-            if ($event === 'query.error') {
-                $this->assertInstanceOf("PDOException", $tArgs[3]);
-            }
-        }
     }
 }

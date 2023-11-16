@@ -2,8 +2,9 @@
 
 namespace Phormium\Tests\Models;
 
-class Person extends \Phormium\Model
-{
+use Phormium\Model;
+
+class Person extends Model {
     protected static $_meta = [
         'database' => 'testdb',
         'table' => 'person',

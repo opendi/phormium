@@ -2,29 +2,28 @@
 
 namespace Phormium\Tests\Integration;
 
+use Phormium\Exception\InvalidRelationException;
 use Phormium\Orm;
 use Phormium\QuerySet;
-use Phormium\Tests\Models\Person;
-use Phormium\Tests\Models\Contact;
 use Phormium\Tests\Models\Asset;
+use Phormium\Tests\Models\Contact;
+use Phormium\Tests\Models\Person;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group model
  */
-class ModelRelationsTraitTest extends \PHPUnit_Framework_TestCase
-{
+class ModelRelationsTraitTest extends TestCase {
     private static $person;
 
-    public static function setUpBeforeClass()
-    {
+    public static function setUpBeforeClass(): void {
         Orm::configure(PHORMIUM_CONFIG_FILE);
 
         self::$person = Person::fromArray(['name' => 'Udo Dirkschneider']);
         self::$person->save();
     }
 
-    public function testGuessableRelation()
-    {
+    public function testGuessableRelation() {
         $pid = self::$person->id;
 
         // Contacts are linked to person via a guessable foreign key name
@@ -53,8 +52,7 @@ class ModelRelationsTraitTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(self::$person, $p3);
     }
 
-    public function testUnguessableRelation()
-    {
+    public function testUnguessableRelation() {
         $pid = self::$person->id;
 
         // Asset is similar to contact, but has a non-guessable foreign key name
@@ -83,52 +81,37 @@ class ModelRelationsTraitTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(self::$person, $p3);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidRelationException
-     * @expectedExceptionMessage Model class "foo" does not exist
-     */
-    public function testInvalidModel1()
-    {
+    public function testInvalidModel1() {
+        $this->expectExceptionMessage("Model class \"foo\" does not exist");
+        $this->expectException(InvalidRelationException::class);
         // Class does not exist
         self::$person->hasChildren("foo");
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidRelationException
-     * @expectedExceptionMessage Given class "DateTime" is not a subclass of Phormium\Model
-     */
-    public function testInvalidModel2()
-    {
+    public function testInvalidModel2() {
+        $this->expectExceptionMessage("Given class \"DateTime\" is not a subclass of Phormium\Model");
+        $this->expectException(InvalidRelationException::class);
         // Class exists but is not a model
         self::$person->hasChildren("DateTime");
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidRelationException
-     * @expectedExceptionMessage Empty key given
-     */
-    public function testInvalidKey1()
-    {
+    public function testInvalidKey1() {
+        $this->expectExceptionMessage("Empty key given");
+        $this->expectException(InvalidRelationException::class);
         // Empty key
         self::$person->hasChildren(Contact::class, []);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidRelationException
-     * @expectedExceptionMessage Invalid key type: "object". Expected string or array.
-     */
-    public function testInvalidKey2()
-    {
+    public function testInvalidKey2() {
+        $this->expectExceptionMessage("Invalid key type: \"object\". Expected string or array.");
+        $this->expectException(InvalidRelationException::class);
         // Key is a class instead of string or array
         self::$person->hasChildren(Contact::class, new Contact());
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidRelationException
-     * @expectedExceptionMessage Property "foo" does not exist
-     */
-    public function testInvalidKey3()
-    {
+    public function testInvalidKey3() {
+        $this->expectExceptionMessage("Property \"foo\" does not exist");
+        $this->expectException(InvalidRelationException::class);
         // Property does not exist
         self::$person->hasChildren(Contact::class, "foo");
     }

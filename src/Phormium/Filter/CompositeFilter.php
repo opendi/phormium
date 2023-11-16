@@ -8,8 +8,7 @@ use Phormium\Exception\InvalidQueryException;
  * A filter which consists of several Filter objects which are joined by an
  * AND or OR operation.
  */
-class CompositeFilter extends Filter
-{
+class CompositeFilter extends Filter {
     const OP_AND = "AND";
     const OP_OR = "OR";
 
@@ -19,8 +18,7 @@ class CompositeFilter extends Filter
     /** The operation to use to join $filters. */
     private $operation;
 
-    public function __construct($operation, array $filters = [])
-    {
+    public function __construct($operation, array $filters = []) {
         $operations = [self::OP_AND, self::OP_OR];
         if (!in_array($operation, $operations)) {
             $operations = implode(', ', $operations);
@@ -48,12 +46,11 @@ class CompositeFilter extends Filter
      *
      * Does not mutate the object.
      *
-     * @param  Filter $filter The filter to add.
+     * @param Filter $filter The filter to add.
      *
      * @return CompositeFilter
      */
-    public function withAdded(Filter $filter)
-    {
+    public function withAdded(Filter $filter) {
         $operation = $this->operation();
         $filters = $this->filters();
         $filters[] = $filter;
@@ -61,13 +58,11 @@ class CompositeFilter extends Filter
         return new CompositeFilter($operation, $filters);
     }
 
-    public function filters()
-    {
-        return $this->filters;
+    public function operation() {
+        return $this->operation;
     }
 
-    public function operation()
-    {
-        return $this->operation;
+    public function filters() {
+        return $this->filters;
     }
 }

@@ -2,26 +2,24 @@
 
 namespace Phormium\Tests\Integration;
 
+use Exception;
 use Phormium\Filter\ColumnFilter;
 use Phormium\Filter\CompositeFilter;
 use Phormium\Filter\Filter;
 use Phormium\Orm;
 use Phormium\Query\OrderBy;
-use Phormium\QuerySet;
 use Phormium\Tests\Models\Person;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group queryset
  */
-class QuerySetTest extends \PHPUnit_Framework_TestCase
-{
-    public static function setUpBeforeClass()
-    {
+class QuerySetTest extends TestCase {
+    public static function setUpBeforeClass(): void {
         Orm::configure(PHORMIUM_CONFIG_FILE);
     }
 
-    public function testCloneQS()
-    {
+    public function testCloneQS() {
         $qs1 = Person::objects();
         $qs2 = $qs1->all();
 
@@ -33,8 +31,7 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertEmpty($qs2->getOrder());
     }
 
-    public function testDeepCloneQS()
-    {
+    public function testDeepCloneQS() {
         $qs1 = Person::objects();
         $qs2 = $qs1->filter("1=1");
         $qs3 = $qs2->filter("1=2");
@@ -47,8 +44,7 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertNotSame($qs2->getFilter(), $qs3->getFilter());
     }
 
-    public function testFilterQS()
-    {
+    public function testFilterQS() {
         $f = new ColumnFilter('name', '=', 'x');
         $qs1 = Person::objects();
         $qs2 = $qs1->filter('name', '=', 'x');
@@ -67,26 +63,19 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Invalid filter: Column [x] does not exist in table [person].
-     */
-    public function testFilterInvalidColumn()
-    {
+    public function testFilterInvalidColumn() {
+        $this->expectExceptionMessage("Invalid filter: Column [x] does not exist in table [person].");
+        $this->expectException(Exception::class);
         Person::objects()->filter('x', '=', 'x');
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Unknown filter operation [!!!].
-     */
-    public function testFilterInvalidOperation()
-    {
+    public function testFilterInvalidOperation() {
+        $this->expectExceptionMessage("Unknown filter operation [!!!].");
+        $this->expectException(Exception::class);
         Person::objects()->filter('name', '!!!', 'x')->fetch();
     }
 
-    public function testOrderQS()
-    {
+    public function testOrderQS() {
         $qs1 = Person::objects();
         $qs2 = $qs1->orderBy('name', 'desc');
 
@@ -119,26 +108,19 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertSame("asc", $columnOrder2->direction());
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Invalid $direction [!!!]. Expected one of [asc, desc].
-     */
-    public function testOrderInvalidDirection()
-    {
+    public function testOrderInvalidDirection() {
+        $this->expectExceptionMessage("Invalid \$direction [!!!]. Expected one of [asc, desc].");
+        $this->expectException(Exception::class);
         Person::objects()->orderBy('name', '!!!');
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot order by column [xxx] because it does not exist in table [person].
-     */
-    public function testOrderInvalidColumn()
-    {
+    public function testOrderInvalidColumn() {
+        $this->expectExceptionMessage("Cannot order by column [xxx] because it does not exist in table [person].");
+        $this->expectException(Exception::class);
         Person::objects()->orderBy('xxx', 'asc');
     }
 
-    public function testBatch()
-    {
+    public function testBatch() {
         // Create some sample data
         $uniq = uniqid('batch');
 
@@ -196,8 +178,7 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(0, $count);
     }
 
-    public function testLazyFetch()
-    {
+    public function testLazyFetch() {
         $uniq = uniqid('lazy');
 
         $persons = [
@@ -227,8 +208,7 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(5, $counter);
     }
 
-    public function testLimitedFetch()
-    {
+    public function testLimitedFetch() {
         // Create some sample data
         $uniq = uniqid('limit');
 
@@ -261,44 +241,31 @@ class QuerySetTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array_slice($persons, 4, 1), $qs->limit(1, 4)->fetch());
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage $limit must be a positive integer or null
-     */
-    public function testLimitedFetchWrongLimit1()
-    {
+    public function testLimitedFetchWrongLimit1() {
+        $this->expectExceptionMessage("\$limit must be a positive integer or null");
+        $this->expectException(Exception::class);
         Person::objects()->limit(1.1);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage $limit must be a positive integer or null
-     */
-    public function testLimitedFetchWrongLimit2()
-    {
+    public function testLimitedFetchWrongLimit2() {
+        $this->expectExceptionMessage("\$limit must be a positive integer or null");
+        $this->expectException(Exception::class);
         Person::objects()->limit("a");
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage $offset must be a positive integer or null
-     */
-    public function testLimitedFetchWrongOffset1()
-    {
+    public function testLimitedFetchWrongOffset1() {
+        $this->expectExceptionMessage("\$offset must be a positive integer or null");
+        $this->expectException(Exception::class);
         Person::objects()->limit(1, 1.1);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage $offset must be a positive integer or null
-     */
-    public function testLimitedFetchWrongOffset2()
-    {
+    public function testLimitedFetchWrongOffset2() {
+        $this->expectExceptionMessage("\$offset must be a positive integer or null");
+        $this->expectException(Exception::class);
         Person::objects()->limit(1, "a");
     }
 
-    public function testLimitOffsetDistinctQuery()
-    {
+    public function testLimitOffsetDistinctQuery() {
         $p1 = Person::fromArray(['name' => 'Foo Bar']);
         $p2 = Person::fromArray(['name' => 'Foo Bar']);
         $p3 = Person::fromArray(['name' => 'Foo Bar']);

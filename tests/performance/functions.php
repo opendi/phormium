@@ -1,8 +1,7 @@
 <?php
 
 /** Start timer */
-function start($name)
-{
+function start($name) {
     global $start, $id;
     $id = $name;
     echo str_pad($name, 20);
@@ -10,8 +9,7 @@ function start($name)
 }
 
 /** End timer */
-function finish()
-{
+function finish() {
     global $start, $stats, $id;
     $duration = round(microtime(true) - $start, 4);
     $stats[$id] = $duration;
@@ -21,8 +19,7 @@ function finish()
 }
 
 /** Save stats to disk */
-function save()
-{
+function save() {
     global $stats;
 
     $branch = git_branch();
@@ -35,17 +32,16 @@ function save()
 
 /** Calls $callback $num times.*/
 function repeat($num, $callback) {
-    for ($i=0; $i < $num; $i++) {
+    for ($i = 0; $i < $num; $i++) {
         $callback();
     }
 }
 
 /** Returns current git branch. */
-function git_branch()
-{
+function git_branch() {
     $out = rtrim(`git branch`);
     $lines = explode("\n", $out);
-    foreach($lines as $line) {
+    foreach ($lines as $line) {
         if ($line[0] == "*") {
             return trim(substr($line, 2));
         }
@@ -53,7 +49,6 @@ function git_branch()
 }
 
 /** Returns the short has of the last commit. */
-function git_hash()
-{
+function git_hash() {
     return `git log -n 1 --pretty=format:%h`;
 }

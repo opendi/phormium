@@ -8,25 +8,16 @@ use Phormium\Query\Aggregate;
 use Phormium\Query\ColumnOrder;
 use Phormium\Query\LimitOffset;
 use Phormium\Query\OrderBy;
-use Phormium\Query\QuerySegment;
 use Phormium\QueryBuilder\QueryBuilderFactory;
 use Phormium\QueryBuilder\QueryBuilderInterface;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group querybuilder
  */
-class QueryBuilderTest extends \PHPUnit_Framework_TestCase
-{
-    /** @return QueryBuilderInterface */
-    private function getQueryBuilder($driver = "common")
-    {
-        $factory = new QueryBuilderFactory();
-        return $factory->getQueryBuilder($driver);
-    }
-
-    public function testBuildSelectCommon()
-    {
+class QueryBuilderTest extends TestCase {
+    public function testBuildSelectCommon() {
         $queryBuilder = $this->getQueryBuilder();
 
         $table = "foo";
@@ -51,7 +42,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
 
         $expectedQuery =
             'SELECT "a", "b", "c" ' .
-            'FROM "foo" '  .
+            'FROM "foo" ' .
             'WHERE ("xx" = ? AND "yy" IS NOT NULL AND ("zz" BETWEEN ? AND ? OR max(?) > 0)) ' .
             'ORDER BY "a" DESC, "b" ASC ' .
             'LIMIT ? OFFSET ?';
@@ -62,8 +53,13 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $segment->args());
     }
 
-    public function testBuildSelectMysql()
-    {
+    /** @return QueryBuilderInterface */
+    private function getQueryBuilder($driver = "common") {
+        $factory = new QueryBuilderFactory();
+        return $factory->getQueryBuilder($driver);
+    }
+
+    public function testBuildSelectMysql() {
         $queryBuilder = $this->getQueryBuilder(Driver::MYSQL);
 
         $table = "foo";
@@ -88,7 +84,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
 
         $expectedQuery =
             'SELECT `a`, `b`, `c` ' .
-            'FROM `foo` '  .
+            'FROM `foo` ' .
             'WHERE (`xx` = ? AND `yy` IS NOT NULL AND (`zz` BETWEEN ? AND ? OR max(?) > 0)) ' .
             'ORDER BY `a` DESC, `b` ASC ' .
             'LIMIT 123 OFFSET 321';
@@ -99,8 +95,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $segment->args());
     }
 
-    public function testBuildSelectAggregate()
-    {
+    public function testBuildSelectAggregate() {
         $queryBuilder = $this->getQueryBuilder();
 
         $table = "foo";
@@ -118,7 +113,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
 
         $expectedQuery =
             'SELECT max("xx") AS aggregate ' .
-            'FROM "foo" '  .
+            'FROM "foo" ' .
             'WHERE ("xx" = ? AND "yy" IS NOT NULL AND ("zz" BETWEEN ? AND ? OR max(?) > 0))';
 
         $expectedArgs = ["yy", 1, 2, 100];
@@ -127,8 +122,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $segment->args());
     }
 
-    public function testBuildInsert()
-    {
+    public function testBuildInsert() {
         $queryBuilder = $this->getQueryBuilder();
 
         $table = "foo";
@@ -144,8 +138,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($values, $segment->args());
     }
 
-    public function testBuildInsertPostgres()
-    {
+    public function testBuildInsertPostgres() {
         $queryBuilder = $this->getQueryBuilder(Driver::PGSQL);
 
         $table = "foo";
@@ -161,8 +154,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($values, $segment->args());
     }
 
-    public function testBuildUpdate()
-    {
+    public function testBuildUpdate() {
         $queryBuilder = $this->getQueryBuilder();
 
         $table = "foo";
@@ -188,8 +180,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedArgs, $segment->args());
     }
 
-    public function testBuildDelete()
-    {
+    public function testBuildDelete() {
         $queryBuilder = $this->getQueryBuilder();
 
         $table = "foo";

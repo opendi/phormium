@@ -1,19 +1,19 @@
 <?php
 
-namespace Phormium\Tests\Unit;
+namespace Phormium\Tests\Unit\Filter;
 
+use Phormium\Exception\InvalidQueryException;
 use Phormium\Filter\ColumnFilter;
 use Phormium\Filter\CompositeFilter;
 use Phormium\Filter\Filter;
 use Phormium\Filter\RawFilter;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group filter
  */
-class FilterTest extends \PHPUnit_Framework_TestCase
-{
-    public function testFactories()
-    {
+class FilterTest extends TestCase {
+    public function testFactories() {
         $col = Filter::col("foo", "=", 1);
         $raw = Filter::raw("lower(a) = ?", [2]);
         $and = Filter::_and($col, $raw);
@@ -33,8 +33,7 @@ class FilterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame([$raw, $col], $or->filters());
     }
 
-    public function testFactory()
-    {
+    public function testFactory() {
         $col = Filter::col("foo", "=", 1);
         $f = Filter::factory($col);
         $this->assertSame($f, $col);
@@ -80,12 +79,9 @@ class FilterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame([1, 2, 3], $f->arguments());
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidQueryException
-     * @expectedExceptionMessage Invalid filter arguments.
-     */
-    public function testFactoryInvalidInput()
-    {
+    public function testFactoryInvalidInput() {
+        $this->expectExceptionMessage("Invalid filter arguments.");
+        $this->expectException(InvalidQueryException::class);
         Filter::factory(1, 2, 3, 4, 5);
     }
 }

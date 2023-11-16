@@ -2,26 +2,25 @@
 
 namespace Phormium\Tests\Unit;
 
+use Phormium\Exception\InvalidModelException;
 use Phormium\Meta;
 use Phormium\MetaBuilder;
-use Phormium\Tests\Models\Asset;
-use Phormium\Tests\Models\Contact;
+use Phormium\Tests\Models\InvalidModel1;
+use Phormium\Tests\Models\InvalidModel2;
 use Phormium\Tests\Models\Model1;
 use Phormium\Tests\Models\Model2;
 use Phormium\Tests\Models\NotModel;
-use Phormium\Tests\Models\InvalidModel1;
-use Phormium\Tests\Models\InvalidModel2;
 use Phormium\Tests\Models\Person;
 use Phormium\Tests\Models\PkLess;
 use Phormium\Tests\Models\Trade;
+use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 /**
  * @group unit
  */
-class MetaBuilderTest extends \PHPUnit_Framework_TestCase
-{
-    public function testPersonMeta()
-    {
+class MetaBuilderTest extends TestCase {
+    public function testPersonMeta() {
         $table = 'person';
         $class = Person::class;
         $database = 'testdb';
@@ -36,8 +35,7 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testTradeMeta()
-    {
+    public function testTradeMeta() {
         $table = 'trade';
         $class = Trade::class;
         $database = 'testdb';
@@ -52,8 +50,7 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testPkLessMeta()
-    {
+    public function testPkLessMeta() {
         $table = 'pkless';
         $class = PkLess::class;
         $database = 'testdb';
@@ -68,8 +65,7 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testParse1()
-    {
+    public function testParse1() {
         $builder = new MetaBuilder();
         $meta = $builder->build(Model1::class);
 
@@ -82,8 +78,7 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(['foo', 'bar', 'baz'], $meta->getNonPkColumns());
     }
 
-    public function testParse2()
-    {
+    public function testParse2() {
         $builder = new MetaBuilder();
         $meta = $builder->build(Model2::class);
 
@@ -96,93 +91,71 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(['bar', 'baz'], $meta->getNonPkColumns());
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid model given
-     */
-    public function testInvalidClass1()
-    {
+    public function testInvalidClass1() {
+        $this->expectExceptionMessage("Invalid model given");
+        $this->expectException(InvalidModelException::class);
         $builder = new MetaBuilder();
         $builder->build(123);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Class "Some\Class" does not exist.
-     */
-    public function testInvalidClass2()
-    {
+    public function testInvalidClass2() {
+        $this->expectExceptionMessage("Class \"Some\Class\" does not exist.");
+        $this->expectException(InvalidModelException::class);
         $builder = new MetaBuilder();
         $builder->build("Some\\Class");
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Class "Phormium\Tests\Models\NotModel" is not a subclass of Phormium\Model.
-     */
-    public function testInvalidClass3()
-    {
+    public function testInvalidClass3() {
+        $this->expectExceptionMessage("Class \"Phormium\Tests\Models\NotModel\" is not a subclass of Phormium\Model.");
+        $this->expectException(InvalidModelException::class);
         $builder = new MetaBuilder();
         $builder->build(NotModel::class);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid Phormium\Tests\Models\InvalidModel1::$_meta. Not an array.
-     */
-    public function testParseErrorNotArray()
-    {
+    public function testParseErrorNotArray() {
+        $this->expectExceptionMessage("Invalid Phormium\Tests\Models\InvalidModel1::\$_meta. Not an array.");
+        $this->expectException(InvalidModelException::class);
         $builder = new MetaBuilder();
         $builder->build(InvalidModel1::class);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Model Phormium\Tests\Models\InvalidModel2 has no defined columns (public properties).
-     */
-    public function testParseNoColumns()
-    {
+    public function testParseNoColumns() {
+        $this->expectExceptionMessage("Model Phormium\Tests\Models\InvalidModel2 has no defined columns (public properties).");
+        $this->expectException(InvalidModelException::class);
         $builder = new MetaBuilder();
         $builder->build(InvalidModel2::class);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid Some\Class::$_meta. Missing "database".
-     */
-    public function testParseErrorMissingDatabase()
-    {
+    public function testParseErrorMissingDatabase() {
+        $this->expectExceptionMessage("Invalid Some\Class::\$_meta. Missing \"database\".");
+        $this->expectException(InvalidModelException::class);
         $class = 'Some\\Class';
         $meta = [];
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getDatabase');
+        $method = new ReflectionMethod($builder, 'getDatabase');
         $method->setAccessible(true);
         $method->invoke($builder, $class, $meta);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid Some\Class::$_meta. Missing "table".
-     */
-    public function testParseErrorMissingTable()
-    {
+    public function testParseErrorMissingTable() {
+        $this->expectExceptionMessage("Invalid Some\Class::\$_meta. Missing \"table\".");
+        $this->expectException(InvalidModelException::class);
         $class = 'Some\\Class';
         $meta = [];
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getTable');
+        $method = new ReflectionMethod($builder, 'getTable');
         $method->setAccessible(true);
         $method->invoke($builder, $class, $meta);
     }
 
-    public function testGetPK()
-    {
+    public function testGetPK() {
         $class = 'Some\\Class';
         $columns = ['id', 'foo'];
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getPK');
+        $method = new ReflectionMethod($builder, 'getPK');
         $method->setAccessible(true);
 
         $meta = ['pk' => 'foo'];
@@ -206,16 +179,13 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid Some\Class::$_meta. Specified primary key column(s) do not exist: bar
-     */
-    public function testGetPKMissingColumn()
-    {
+    public function testGetPKMissingColumn() {
+        $this->expectExceptionMessage("Invalid Some\Class::\$_meta. Specified primary key column(s) do not exist: bar");
+        $this->expectException(InvalidModelException::class);
         $class = 'Some\\Class';
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getPK');
+        $method = new ReflectionMethod($builder, 'getPK');
         $method->setAccessible(true);
 
         $columns = ['foo'];
@@ -223,17 +193,14 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $method->invoke($builder, $class, $meta, $columns);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid primary key given in Some\Class::$_meta. Not a string or array.
-     */
-    public function testGetPKInvalidPK()
-    {
+    public function testGetPKInvalidPK() {
+        $this->expectExceptionMessage("Invalid primary key given in Some\Class::\$_meta. Not a string or array.");
+        $this->expectException(InvalidModelException::class);
         $class = 'Some\\Class';
         $columns = ['foo'];
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getPK');
+        $method = new ReflectionMethod($builder, 'getPK');
         $method->setAccessible(true);
 
         $meta = ['pk' => true];
@@ -241,17 +208,14 @@ class MetaBuilderTest extends \PHPUnit_Framework_TestCase
         $method->invoke($builder, $class, $meta, $columns);
     }
 
-    /**
-     * @expectedException Phormium\Exception\InvalidModelException
-     * @expectedExceptionMessage Invalid primary key given in Some\Class::$_meta. Not a string or array.
-     */
-    public function testGetColumnsNoColumns()
-    {
+    public function testGetColumnsNoColumns() {
+        $this->expectExceptionMessage("Invalid primary key given in Some\Class::\$_meta. Not a string or array.");
+        $this->expectException(InvalidModelException::class);
         $class = 'Some\\Class';
         $columns = ['foo'];
 
         $builder = new MetaBuilder();
-        $method = new \ReflectionMethod($builder, 'getPK');
+        $method = new ReflectionMethod($builder, 'getPK');
         $method->setAccessible(true);
 
         $meta = ['pk' => true];

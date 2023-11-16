@@ -4,16 +4,14 @@ namespace Phormium\Tests\Unit\Filter;
 
 use Phormium\Filter\Filter;
 use Phormium\Filter\RawFilter;
-use Phormium\Tests\Models\Person;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group unit
  * @group filter
  */
-class RawFilterTest extends \PHPUnit_Framework_TestCase
-{
-    function testConstruction()
-    {
+class RawFilterTest extends TestCase {
+    function testConstruction() {
         $condition = "lower(name) = ?";
         $arguments = ['foo'];
 
@@ -23,8 +21,7 @@ class RawFilterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($arguments, $filter->arguments());
     }
 
-    function testFactory()
-    {
+    function testFactory() {
         $condition = "lower(name) = ?";
         $arguments = ['foo'];
 

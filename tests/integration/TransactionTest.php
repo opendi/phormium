@@ -2,22 +2,21 @@
 
 namespace Phormium\Tests\Integration;
 
+use Exception;
 use Phormium\Orm;
 use Phormium\Query\QuerySegment;
 use Phormium\Tests\Models\Person;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group transaction
  */
-class TransactionTest extends \PHPUnit_Framework_TestCase
-{
-    public static function setUpBeforeClass()
-    {
+class TransactionTest extends TestCase {
+    public static function setUpBeforeClass(): void {
         Orm::configure(PHORMIUM_CONFIG_FILE);
     }
 
-    public function testManualBeginCommit()
-    {
+    public function testManualBeginCommit() {
         $person = new Person();
         $person->name = 'Bruce Dickinson';
         $person->income = 12345;
@@ -36,8 +35,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(54321, Person::get($id)->income);
     }
 
-    public function testManualBeginRollback()
-    {
+    public function testManualBeginRollback() {
         $person = new Person();
         $person->name = 'Steve Harris';
         $person->income = 12345;
@@ -56,8 +54,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(12345, Person::get($id)->income);
     }
 
-    public function testCallbackTransactionCommit()
-    {
+    public function testCallbackTransactionCommit() {
         $person = new Person();
         $person->name = 'Dave Murray';
         $person->income = 12345;
@@ -65,7 +62,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
 
         $id = $person->id;
 
-        Orm::transaction(function() use ($id) {
+        Orm::transaction(function () use ($id) {
             $p = Person::get($id);
             $p->income = 54321;
             $p->save();
@@ -74,8 +71,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(54321, Person::get($id)->income);
     }
 
-    public function testCallbackTransactionRollback()
-    {
+    public function testCallbackTransactionRollback() {
         $person = new Person();
         $person->name = 'Adrian Smith';
         $person->income = 12345;
@@ -84,17 +80,17 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $id = $person->id;
 
         try {
-            Orm::transaction(function() use ($id) {
+            Orm::transaction(function () use ($id) {
                 $p = Person::get($id);
                 $p->income = 54321;
                 $p->save();
 
-                throw new \Exception("Aborting");
+                throw new Exception("Aborting");
             });
 
             self::fail("This code should not be reachable.");
 
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             // Expected. Do nothing.
         }
 
@@ -102,8 +98,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(12345, Person::get($id)->income);
     }
 
-    public function testDisconnectRollsBackTransaction()
-    {
+    public function testDisconnectRollsBackTransaction() {
         $person = new Person();
         $person->name = 'Nicko McBrain';
         $person->income = 12345;
@@ -126,8 +121,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(12345, Person::get($id)->income);
     }
 
-    public function testDisconnectAllRollsBackTransaction()
-    {
+    public function testDisconnectAllRollsBackTransaction() {
         $person = new Person();
         $person->name = 'Nicko McBrain';
         $person->income = 12345;
@@ -146,8 +140,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(12345, Person::get($id)->income);
     }
 
-    public function testExecuteTransaction()
-    {
+    public function testExecuteTransaction() {
         $person = new Person();
         $person->name = 'Janick Gers';
         $person->income = 100;
@@ -171,8 +164,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(101, Person::get($id)->income);
     }
 
-    public function testPreparedExecuteTransaction()
-    {
+    public function testPreparedExecuteTransaction() {
         $person = new Person();
         $person->name = 'Janick Gers';
         $person->income = 100;
@@ -196,33 +188,26 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, Person::get($id)->income);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot roll back. Not in transaction.
-     */
-    public function testRollbackBeforeBegin()
-    {
+    public function testRollbackBeforeBegin() {
+        $this->expectExceptionMessage("Cannot roll back. Not in transaction.");
+        $this->expectException(Exception::class);
         Orm::rollback();
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot commit. Not in transaction.
-     */
-    public function testCommitBeforeBegin()
-    {
+    public function testCommitBeforeBegin() {
+        $this->expectExceptionMessage("Cannot commit. Not in transaction.");
+        $this->expectException(Exception::class);
         Orm::commit();
     }
 
-    public function testDoubleBegin()
-    {
+    public function testDoubleBegin() {
         Orm::begin();
 
         try {
             Orm::begin();
             $this->fail('Expected an exception here.');
-        } catch (\Exception $e) {
-            $this->assertContains("Already in transaction.", $e->getMessage());
+        } catch (Exception $e) {
+            $this->assertStringContainsString("Already in transaction.", $e->getMessage());
         }
 
         Orm::rollback();

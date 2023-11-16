@@ -2,26 +2,26 @@
 
 namespace Phormium\Tests\Integration;
 
-use Phormium\Orm;
+use Exception;
 use Phormium\Database\Driver;
+use Phormium\Exception\ModelNotFoundException;
+use Phormium\Orm;
+use Phormium\Tests\Models\Person;
 use Phormium\Tests\Models\Asset;
 use Phormium\Tests\Models\Contact;
-use Phormium\Tests\Models\Person;
 use Phormium\Tests\Models\PkLess;
 use Phormium\Tests\Models\Trade;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group model
  */
-class ModelTest extends \PHPUnit_Framework_TestCase
-{
-    public static function setUpBeforeClass()
-    {
+class ModelTest extends TestCase {
+    public static function setUpBeforeClass(): void {
         Orm::configure(PHORMIUM_CONFIG_FILE);
     }
 
-    public function testNewPerson()
-    {
+    public function testNewPerson() {
         $now = date('Y-m-d H:i:s');
 
         $p = new Person();
@@ -48,8 +48,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($p, $p3);
     }
 
-    public function testBooleanFalse()
-    {
+    public function testBooleanFalse() {
         $p = new Person();
         $p->name = "Courtney Love";
         $p->is_cool = false;
@@ -66,8 +65,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testBooleanTrue()
-    {
+    public function testBooleanTrue() {
         $p = new Person();
         $p->name = "Courtney Barnett";
         $p->is_cool = true;
@@ -84,8 +82,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testNewTrade()
-    {
+    public function testNewTrade() {
         $date = '2013-07-17';
         $no = 12345;
 
@@ -119,19 +116,15 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($t, $t3);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot insert. Primary key column(s) not set.
-     */
-    public function testNewTradeHalfPkSet()
-    {
+    public function testNewTradeHalfPkSet() {
+        $this->expectExceptionMessage("Cannot insert. Primary key column(s) not set.");
+        $this->expectException(Exception::class);
         $t = new Trade();
         $t->tradedate = date('Y-m-d');
         $t->insert();
     }
 
-    public function testNewPersonAssignedPK()
-    {
+    public function testNewPersonAssignedPK() {
         $id = 100;
 
         // Delete person id 100 if it already exists
@@ -150,8 +143,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($p, $p2);
     }
 
-    public function testNewPersonFromArray()
-    {
+    public function testNewPersonFromArray() {
         $p = Person::fromArray(
             [
                 'name' => 'Peter Peterson',
@@ -179,8 +171,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($id, $p3->id);
     }
 
-    public function testFromJSON()
-    {
+    public function testFromJSON() {
         $actual = Person::fromJSON(
             '{"id":"101","name":"Jack Jackson","email":"jack@jackson.org","birthday":"1980-03-14",' .
             '"created":"2000-03-07 10:45:13","income":"12345.67"}'
@@ -197,8 +188,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testFromYAML()
-    {
+    public function testFromYAML() {
         $yaml = implode("\n", [
             'id: 101',
             'name: "Jack Jackson"',
@@ -221,38 +211,28 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Failed parsing JSON
-     */
-    public function testFromJSONError()
-    {
+    public function testFromJSONError() {
+        $this->expectExceptionMessage("Failed parsing JSON");
+        $this->expectException(Exception::class);
         Person::fromJSON('[[[');
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Given argument is not an array
-     */
-    public function testInvalidData()
-    {
+    public function testInvalidData() {
+        $this->expectExceptionMessage("Given argument is not an array");
+        $this->expectException(Exception::class);
         $p = Person::fromArray('invalid data');
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Property [xxx] does not exist in class [Phormium\Tests\Models\Person]
-     */
-    public function testInvalidProperty()
-    {
+    public function testInvalidProperty() {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Property [xxx] does not exist in class [Phormium\Tests\Models\Person]");
         $p = Person::fromArray([
             'name' => 'Peter Peterson',
             'xxx' => 'peter@peterson.com' // doesn't exist
         ], true);
     }
 
-    public function testUpdate()
-    {
+    public function testUpdate() {
         // Insert
         $person1 = new Person();
         $person1->name = 'foo';
@@ -273,50 +253,37 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('bar', $person3->name);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot update. Primary key column [id] is not set.
-     */
-    public function testUpdateNoPK()
-    {
+    public function testUpdateNoPK() {
+        $this->expectExceptionMessage("Cannot update. Primary key column [id] is not set.");
+        $this->expectException(Exception::class);
         $person = new Person();
         $person->update();
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot update. Primary key column [tradeno] is not set.
-     */
-    public function testUpdateNoPKComposite1()
-    {
+    public function testUpdateNoPKComposite1() {
+        $this->expectExceptionMessage("Cannot update. Primary key column [tradeno] is not set.");
+        $this->expectException(Exception::class);
         $trade = new Trade();
         $trade->tradedate = date('Y-m-d');
         $trade->update();
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot update. Primary key column [tradedate] is not set.
-     */
-    public function testUpdateNoPKComposite2()
-    {
+    public function testUpdateNoPKComposite2() {
+        $this->expectExceptionMessage("Cannot update. Primary key column [tradedate] is not set.");
+        $this->expectException(Exception::class);
         $trade = new Trade();
         $trade->tradeno = 100;
         $trade->update();
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Primary key not defined for model [Phormium\Tests\Models\PkLess].
-     */
-    public function testUpdatePkless()
-    {
+    public function testUpdatePkless() {
+        $this->expectExceptionMessage("Primary key not defined for model [Phormium\Tests\Models\PkLess].");
+        $this->expectException(Exception::class);
         $pkless = new PkLess();
         $pkless->update();
     }
 
-    public function testDelete()
-    {
+    public function testDelete() {
         $person1 = new Person();
         $person1->name = 'Short Lived Person';
         $person1->save();
@@ -336,19 +303,21 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(0, $count);
     }
 
-    public function testSelectAndUpdate()
-    {
+    public function testSelectAndUpdate() {
         $person1 = new Person();
         $person1->name = 'Short Lived Person';
         $person1->save();
 
+        $this->assertNotEmpty($person1->id);
+
         $update = Person::get($person1->id);
         $update->name = 'Long Lived Person';
         $update->save();
+
+        $this->assertNotEmpty($person1->id);
     }
 
-    public function testLimit()
-    {
+    public function testLimit() {
         $allPeople = Person::objects()
             ->orderBy('id', 'asc')
             ->fetch();
@@ -367,11 +336,10 @@ class ModelTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Check single() fails when no records match.
-     * @expectedException \Exception
-     * @expectedExceptionMessage Query returned 0 rows. Requested a single row.
      */
-    public function testSingleZero()
-    {
+    public function testSingleZero() {
+        $this->expectExceptionMessage("Query returned 0 rows. Requested a single row.");
+        $this->expectException(Exception::class);
         $qs = Person::objects()->filter('name', '=', 'Hrvoje');
         $qs->delete();
 
@@ -381,8 +349,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         Person::objects()->filter('name', '=', 'Hrvoje')->single();
     }
 
-    public function testSingleZeroAllowed()
-    {
+    public function testSingleZeroAllowed() {
         $qs = Person::objects()->filter('name', '=', 'The Invisible Man');
         $qs->delete();
 
@@ -395,11 +362,10 @@ class ModelTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Check single() fails when multiple records match.
-     * @expectedException \Exception
-     * @expectedExceptionMessage Query returned 3 rows. Requested a single row.
      */
-    public function testSingleMultiple()
-    {
+    public function testSingleMultiple() {
+        $this->expectExceptionMessage("Query returned 3 rows. Requested a single row.");
+        $this->expectException(Exception::class);
         $qs = Person::objects()->filter('name', '=', 'Hrvoje');
         $qs->delete();
 
@@ -420,10 +386,9 @@ class ModelTest extends \PHPUnit_Framework_TestCase
     /**
      * Method fromArray() should also handle stdClass objects.
      */
-    public function testFromObject()
-    {
+    public function testFromObject() {
         $array = ['name' => 'Kiki', 'income' => 123.45];
-        $object = (object) $array;
+        $object = (object)$array;
 
         $p1 = Person::fromArray($array);
         $p2 = Person::fromArray($object);
@@ -433,35 +398,26 @@ class ModelTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Get doesn't work on models without a primary key.
-     *
-     * @expectedException \Exception
-     * @expectedExceptionMessage  Primary key not defined for model [Phormium\Tests\Models\PkLess].
      */
-    public function testGetErrorOnPKLess()
-    {
+    public function testGetErrorOnPKLess() {
+        $this->expectExceptionMessage("Primary key not defined for model [Phormium\Tests\Models\PkLess].");
+        $this->expectException(Exception::class);
         PkLess::get(1);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Model [Phormium\Tests\Models\Person] has 1 primary key columns. 3 arguments given.
-     */
-    public function testGetErrorWrongPKCount()
-    {
+    public function testGetErrorWrongPKCount() {
+        $this->expectExceptionMessage("Model [Phormium\Tests\Models\Person] has 1 primary key columns. 3 arguments given.");
+        $this->expectException(Exception::class);
         Person::get(1, 2, 3);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ModelNotFoundException
-     * @expectedExceptionMessage [Phormium\Tests\Models\Person] record with primary key [12345678] does not exist.
-     */
-    public function testGetErrorModelDoesNotExist()
-    {
+    public function testGetErrorModelDoesNotExist() {
+        $this->expectExceptionMessage("[Phormium\Tests\Models\Person] record with primary key [12345678] does not exist.");
+        $this->expectException(ModelNotFoundException::class);
         Person::get(12345678);
     }
 
-    public function testFind()
-    {
+    public function testFind() {
         $this->assertNull(Person::find(12345678));
 
         $p = new Person();
@@ -473,8 +429,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($p, $p2);
     }
 
-    public function testExists()
-    {
+    public function testExists() {
         $this->assertFalse(Person::exists(12345678));
 
         $p = new Person();
@@ -485,8 +440,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($actual);
     }
 
-    public function testGetPK()
-    {
+    public function testGetPK() {
         $foo = new Person();
         $this->assertCount(1, $foo->getPK());
 
@@ -497,8 +451,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(2, $foo->getPK());
     }
 
-    public function testFetchDistinct()
-    {
+    public function testFetchDistinct() {
         $name = uniqid();
 
         Person::fromArray(['name' => $name, 'income' => 100])->insert();
@@ -534,17 +487,13 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage No columns given
-     */
-    public function testFetchDistinctFailureNoColumns()
-    {
+    public function testFetchDistinctFailureNoColumns() {
+        $this->expectExceptionMessage("No columns given");
+        $this->expectException(Exception::class);
         Person::objects()->distinct();
     }
 
-    public function testFetchValues()
-    {
+    public function testFetchValues() {
         $name = uniqid();
 
         Person::fromArray(['name' => "$name-1", 'income' => 100])->insert();
@@ -582,7 +531,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
             ->orderBy('name', 'asc')
             ->valuesFlat('name');
 
-         $expected = [
+        $expected = [
             "$name-1",
             "$name-2",
             "$name-3",
@@ -591,8 +540,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testToArray()
-    {
+    public function testToArray() {
         $person = Person::fromArray([
             'name' => "Michael Kiske",
             'email' => "miki@example.com",
@@ -612,8 +560,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $person->toArray());
     }
 
-    public function testToJson()
-    {
+    public function testToJson() {
         $person = Person::fromArray([
             'name' => "Michael Kiske",
             'email' => "miki@example.com",
@@ -625,8 +572,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $person->toJSON());
     }
 
-    public function testToYaml()
-    {
+    public function testToYaml() {
         $person = Person::fromArray([
             'name' => "Michael Kiske",
             'email' => "miki@example.com",
@@ -634,36 +580,32 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $expected = implode("\n", [
-            'id: null',
-            "name: 'Michael Kiske'",
-            'email: miki@example.com',
-            'birthday: null',
-            'created: null',
-            'income: 100000',
-            'is_cool: null',
-        ]) . "\n";
+                'id: null',
+                "name: 'Michael Kiske'",
+                'email: miki@example.com',
+                'birthday: null',
+                'created: null',
+                'income: 100000',
+                'is_cool: null',
+            ]) . "\n";
 
         $this->assertSame($expected, $person->toYAML());
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Model not writable because primary key is not defined in _meta.
-     */
-    public function testSaveModelWithoutPrimaryKey()
-    {
+    public function testSaveModelWithoutPrimaryKey() {
+        $this->expectExceptionMessage("Model not writable because primary key is not defined in _meta.");
+        $this->expectException(Exception::class);
         $pkl = new PkLess();
         $pkl->save();
     }
 
-    public function testAll()
-    {
+    public function testAll() {
         Contact::objects()->delete();
         Asset::objects()->delete();
         Person::objects()->delete();
 
         $actual = Person::all();
-        $this->assertInternalType('array', $actual);
+        $this->assertIsArray($actual);
         $this->assertEmpty($actual);
 
         Person::fromArray(['name' => "Freddy Mercury"])->insert();
@@ -671,12 +613,11 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         Person::fromArray(['name' => "Roger Taylor"])->insert();
 
         $actual = Person::all();
-        $this->assertInternalType('array', $actual);
+        $this->assertIsArray($actual);
         $this->assertCount(3, $actual);
     }
 
-    public function testDump()
-    {
+    public function testDump() {
         $p = Person::fromArray([
             'id' => 10,
             'name' => "Tom Lehrer",
@@ -705,8 +646,7 @@ class ModelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testGetMeta()
-    {
+    public function testGetMeta() {
         // Just to improve code coverage
         $meta1 = Person::getMeta();
         $meta2 = Person::objects()->getMeta();

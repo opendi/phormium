@@ -6,19 +6,17 @@ use Phormium\Filter\CompositeFilter;
 use Phormium\Filter\RawFilter;
 use Phormium\Orm;
 use Phormium\Tests\Models\Person;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group filter
  */
-class FilterTest extends \PHPUnit_Framework_TestCase
-{
-    public static function setUpBeforeClass()
-    {
+class FilterTest extends TestCase {
+    public static function setUpBeforeClass(): void {
         Orm::configure(PHORMIUM_CONFIG_FILE);
     }
 
-    public function testCaseInsensitiveLike()
-    {
+    public function testCaseInsensitiveLike() {
         $qs = Person::objects()->filter('name', 'ilike', 'pero');
 
         $qs->delete();
@@ -33,8 +31,7 @@ class FilterTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(4, $qs->fetch());
     }
 
-    function testRawFilter()
-    {
+    function testRawFilter() {
         $condition = "lower(name) = ?";
         $arguments = ['foo'];
 

@@ -4,8 +4,7 @@ namespace Phormium\Tests\Models;
 
 use Phormium\Model;
 
-class Contact extends Model
-{
+class Contact extends Model {
     protected static $_meta = [
         'database' => 'testdb',
         'table' => 'contact',

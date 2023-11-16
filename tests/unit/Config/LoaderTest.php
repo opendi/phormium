@@ -1,18 +1,21 @@
 <?php
 
+namespace Phormium\Tests\Unit\Config;
+
 use Phormium\Config\ArrayLoader;
 use Phormium\Config\JsonLoader;
 use Phormium\Config\YamlLoader;
+use Phormium\Exception\ConfigurationException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
 /**
  * @group config
  * @group unit
  */
-class LoaderTest extends \PHPUnit_Framework_TestCase
-{
-    public function testArrayLoader()
-    {
+class LoaderTest extends TestCase {
+    public function testArrayLoader() {
         $config = ['foo' => 'bar'];
 
         $loader = new ArrayLoader();
@@ -22,13 +25,12 @@ class LoaderTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($loader->supports([]));
         $this->assertFalse($loader->supports(""));
         $this->assertFalse($loader->supports(123));
-        $this->assertFalse($loader->supports(new \stdClass));
+        $this->assertFalse($loader->supports(new stdClass));
     }
 
-    public function testJsonLoader()
-    {
+    public function testJsonLoader() {
         $config = ['foo' => 'bar'];
-        $json = json_encode($config);
+        $json = @json_encode($config);
 
         $tempFile = tempnam(sys_get_temp_dir(), "pho") . ".json";
         file_put_contents($tempFile, $json);
@@ -41,17 +43,14 @@ class LoaderTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($loader->supports("foo.yaml"));
         $this->assertFalse($loader->supports(123));
         $this->assertFalse($loader->supports([]));
-        $this->assertFalse($loader->supports(new \stdClass));
+        $this->assertFalse($loader->supports(new stdClass));
 
         unlink($tempFile);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Failed parsing JSON configuration file.
-     */
-    public function testJsonLoaderInvalidSyntax()
-    {
+    public function testJsonLoaderInvalidSyntax() {
+        $this->expectExceptionMessage("Failed parsing JSON configuration file.");
+        $this->expectException(ConfigurationException::class);
         $tempFile = tempnam(sys_get_temp_dir(), "pho") . ".json";
         file_put_contents($tempFile, "this is not json");
 
@@ -61,8 +60,7 @@ class LoaderTest extends \PHPUnit_Framework_TestCase
         unlink($tempFile);
     }
 
-    public function testYamlLoader()
-    {
+    public function testYamlLoader() {
         $config = ['foo' => 'bar'];
         $yaml = Yaml::dump($config);
 
@@ -77,17 +75,14 @@ class LoaderTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($loader->supports("foo.json"));
         $this->assertFalse($loader->supports(123));
         $this->assertFalse($loader->supports([]));
-        $this->assertFalse($loader->supports(new \stdClass));
+        $this->assertFalse($loader->supports(new stdClass));
 
         unlink($tempFile);
     }
 
-    /**
-     * @expectedException Phormium\Exception\ConfigurationException
-     * @expectedExceptionMessage Config file not found at "doesnotexist.yaml".
-     */
-    public function testLoadFileFailed()
-    {
+    public function testLoadFileFailed() {
+        $this->expectExceptionMessage("Config file not found at \"doesnotexist.yaml\".");
+        $this->expectException(ConfigurationException::class);
         $loader = new YamlLoader();
         $loader->load("doesnotexist.yaml");
     }
