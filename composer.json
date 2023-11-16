@@ -1,39 +1,52 @@
 {
-    "name": "phormium/phormium",
-    "type": "library",
-    "description": "A minimalist ORM for PHP.",
-    "keywords": ["database","orm","php","mapping"],
-    "homepage": "https://github.com/ihabunek/phormium",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Ivan Habunek",
-            "email": "ivan@habunek.com"
-        }
-    ],
-    "require": {
-        "php": ">=5.6.0",
-        "ext-pdo": "*",
-        "ext-mbstring": "*",
-        "evenement/evenement": "^2.0.0",
-        "pimple/pimple": "^3.0.0",
-        "symfony/config": ">=2.3.0 <4.0.0",
-        "symfony/yaml": ">=2.0.4 <4.0.0"
+  "name": "opendi/phormium",
+  "type": "library",
+  "description": "A minimalist ORM for PHP.",
+  "keywords": [
+    "database",
+    "orm",
+    "php",
+    "mapping"
+  ],
+  "homepage": "https://github.com/opendi/phormium",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ivan Habunek",
+      "email": "ivan@habunek.com"
     },
-    "require-dev": {
-        "mockery/mockery": "@stable"
-    },
-    "autoload": {
-        "psr-0": {"Phormium": "src/"}
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Phormium\\Tests\\Integration\\": "tests/integration/",
-            "Phormium\\Tests\\Models\\": "tests/models/",
-            "Phormium\\Tests\\Unit\\": "tests/unit/"
-        }
-    },
-    "support": {
-        "issues": "https://github.com/ihabunek/phormium/issues"
+    {
+      "name": "Michel Feldheim",
+      "email": "m.feldheim@opendi.com"
     }
+  ],
+  "require": {
+    "php": ">=7.4.0",
+    "ext-pdo": "*",
+    "ext-mbstring": "*",
+    "ext-json": "*",
+    "evenement/evenement": "^3.0",
+    "pimple/pimple": "^3.5",
+    "symfony/config": "^5.4",
+    "symfony/yaml": "^5.4"
+  },
+  "require-dev": {
+    "mockery/mockery": "^1.6",
+    "phpunit/phpunit": "^9.6"
+  },
+  "autoload": {
+    "psr-0": {
+      "Phormium": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Phormium\\Tests\\Integration\\": "tests/integration/",
+      "Phormium\\Tests\\Models\\": "tests/models/",
+      "Phormium\\Tests\\Unit\\": "tests/unit/"
+    }
+  },
+  "support": {
+    "issues": "https://github.com/opendi/phormium/issues"
+  }
 }
